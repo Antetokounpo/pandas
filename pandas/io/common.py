@@ -143,6 +143,51 @@ def stringify_path(
     return _expand_user(filepath_or_buffer)
 
 
+def is_s3_url(url) -> bool:
+    """Check for an s3, s3n, or s3a url"""
+    if not isinstance(url, str):
+        return False
+    return parse_url(url).scheme in ["s3", "s3n", "s3a"]
+
+
+def is_gcs_url(url) -> bool:
+    """Check for a gcs url"""
+    if not isinstance(url, str):
+        return False
+    return parse_url(url).scheme in ["gcs", "gs"]
+
+
+def _urlopen(*args, **kwargs):
+    compression = None
+    content_encoding = None
+    try:
+        import requests
+
+        url = args[0]
+        session = kwargs.pop("session", None)
+        if session:
+            if not isinstance(session, requests.sessions.Session):
+                raise ValueError(
+                    "Expected a requests.sessions.Session object, "
+                    "got {!r}".format(session)
+                )
+            r = session.get(url)
+        else:
+            r = requests.get(url)
+        r.raise_for_status()
+        content = r.content
+        r.close()
+    except ImportError:
+        r = urlopen(*args, **kwargs)
+        content = r.read()
+        content_encoding = r.headers.get("Content-Encoding", None)
+    if content_encoding == "gzip":
+        # Override compression based on Content-Encoding header.
+        compression = "gzip"
+    reader = BytesIO(content)
+    return reader, compression
+
+
 def urlopen(*args, **kwargs):
     """
     Lazy-import wrapper for stdlib urlopen, as that imports a big chunk of
@@ -264,6 +309,16 @@ def get_filepath_or_buffer(
             compression=compression,
             should_close=True,
             mode=fsspec_mode,
+        )
+    if isinstance(filepath_or_buffer, str) and _is_url(filepath_or_buffer):
+        reader, compression = _urlopen(filepath_or_buffer, session=session)
+        return reader, encoding, compression, True
+
+    if is_s3_url(filepath_or_buffer):
+        from pandas.io import s3
+
+        return s3.get_filepath_or_buffer(
+            filepath_or_buffer, encoding=encoding, compression=compression, mode=mode
         )
 
     if is_fsspec_url(filepath_or_buffer):

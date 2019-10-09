@@ -22,6 +22,7 @@ from pandas.io.common import (
     stringify_path,
     urlopen,
     validate_header_arg,
+    _urlopen,
 )
 from pandas.io.excel._util import (
     fill_mi_header,
@@ -347,11 +348,11 @@ def read_excel(
     )
 
 
-class BaseExcelReader(metaclass=abc.ABCMeta):
-    def __init__(self, filepath_or_buffer, storage_options: StorageOptions = None):
+class _BaseExcelReader(metaclass=abc.ABCMeta):
+    def __init__(self, filepath_or_buffer, session=None):
         # If filepath_or_buffer is a url, load the data into a BytesIO
-        if is_url(filepath_or_buffer):
-            filepath_or_buffer = BytesIO(urlopen(filepath_or_buffer).read())
+        if _is_url(filepath_or_buffer):
+            filepath_or_buffer, _ = _urlopen(filepath_or_buffer, session=session)
         elif not isinstance(filepath_or_buffer, (ExcelFile, self._workbook_class)):
             filepath_or_buffer = get_filepath_or_buffer(
                 filepath_or_buffer, storage_options=storage_options
