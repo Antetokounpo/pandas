@@ -286,6 +286,7 @@ qtpy                                         Clipboard I/O
 s3fs                      0.4.0              Amazon S3 access
 tabulate                  0.8.3              Printing in Markdown-friendly format (see `tabulate`_)
 xarray                    0.12.0             pandas-like API for N-dimensional data
+requests                  2.10.0             Improves reading data from URLs
 xclip                                        Clipboard I/O on linux
 xlrd                      1.2.0              Excel reading
 xlwt                      1.3.0              Excel writing
