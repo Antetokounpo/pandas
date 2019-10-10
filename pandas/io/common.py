@@ -161,8 +161,7 @@ def urlopen(*args, **kwargs):
     compression = None
     content_encoding = None
     try:
-        import requests
-
+        requests = import_optional_dependency("requests")
         r = requests.get(*args, **kwargs)
         r.raise_for_status()
         content = r.content
