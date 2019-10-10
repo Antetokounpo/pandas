@@ -349,10 +349,10 @@ def read_excel(
 
 
 class _BaseExcelReader(metaclass=abc.ABCMeta):
-    def __init__(self, filepath_or_buffer, session=None):
+    def __init__(self, filepath_or_buffer):
         # If filepath_or_buffer is a url, load the data into a BytesIO
         if _is_url(filepath_or_buffer):
-            filepath_or_buffer, _ = _urlopen(filepath_or_buffer, session=session)
+            filepath_or_buffer, _ = urlopen(filepath_or_buffer)
         elif not isinstance(filepath_or_buffer, (ExcelFile, self._workbook_class)):
             filepath_or_buffer = get_filepath_or_buffer(
                 filepath_or_buffer, storage_options=storage_options
